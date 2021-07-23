@@ -96,9 +96,27 @@ exports.addUser = addUser;
  * @return {Promise<[{}]>} A promise to the reservations.
  */
 const getAllReservations = function(guest_id, limit = 10) {
-  return getAllProperties(null, 2);
+  const sqlQuery = `
+    SELECT reservations.*, properties.*
+    FROM reservations 
+    JOIN properties ON properties.id = reservations.property_id
+    JOIN property_reviews ON properties.id = property_reviews.property_id
+    WHERE reservations.guest_id = $1
+    AND reservations.start_date >= now()
+    GROUP BY properties.id, reservations.id
+    LIMIT $2
+    `;
+  return pool.query(sqlQuery, [guest_id, limit])
+  .then(data => data.rows)
+  .catch(null)
 }
 exports.getAllReservations = getAllReservations;
+
+// Original download
+// const getAllReservations = function(guest_id, limit = 10) {
+//   return getAllProperties(null, 2);
+// }
+// exports.getAllReservations = getAllReservations;
 
 /// Properties
 
